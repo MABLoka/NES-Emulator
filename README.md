@@ -14,7 +14,7 @@ Below is a list of features that have been implemented so far and those that are
 - [x] Mirroring
 
 ### PPU (2C02)
-- [x] Background
+- [x] Background (ish)
 - [ ] Foreground (Sprites)
 
 ### Mappers
