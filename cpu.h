@@ -27,7 +27,6 @@ typedef struct{
     uint8_t F;
     BUS *bus;
     uint8_t memory[2048]; // 2KB Memory Space
-    uint8_t status;
     uint8_t fetched;
     uint16_t temp;
     uint16_t addr_abs;
@@ -44,11 +43,13 @@ void cpu_init(BUS* bus);
 CPU* GetCpu();
 uint8_t fetch();
 void cpuClock();
-
+int CpuComplete();
+void cpuWrite( uint16_t a, uint16_t d);
+uint8_t cpuRead( uint16_t a);
 // Convenience functions to access status register
 uint8_t GetFlag(Flags f);
 void    SetFlag(Flags f, int v);
-void nmi();
+void NMI();
 uint8_t BRK();
 uint8_t BPL();
 uint8_t JSR();

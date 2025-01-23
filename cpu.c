@@ -3,12 +3,16 @@
 #include <stdint.h>
 #include <signal.h>
 #include "cpu.h"
+#include <string.h>
 
 
 static CPU cpu = {0};
-
+static int count = 0;
 void cpu_init(BUS* bus){
 
+	
+
+	// Set it
     // Registers
     cpu.A = 0;
     cpu.X = 0;
@@ -16,9 +20,9 @@ void cpu_init(BUS* bus){
     // Status register
     cpu.F = 0;
     //stack pointer
-    cpu.SP = 0xFD;
+    cpu.SP = 0x00;
     // Program counter
-    cpu.PC = 0xFFFC;
+    cpu.PC = 0x0000;
    
 	cpu.bus = bus; // Connects the cpu to the bus
     cpu.fetched = 0x00;
@@ -60,11 +64,154 @@ struct Instruction lookup[] =
 		{ "BEQ", BEQ, REL, 2 },{ "SBC", SBC, IZY, 5 },{ "???", XXX, IMP, 2 },{ "???", XXX, IMP, 8 },{ "???", NOP, IMP, 4 },{ "SBC", SBC, ZPX, 4 },{ "INC", INC, ZPX, 6 },{ "???", XXX, IMP, 6 },{ "SED", SED, IMP, 2 },{ "SBC", SBC, ABY, 4 },{ "NOP", NOP, IMP, 2 },{ "???", XXX, IMP, 7 },{ "???", NOP, IMP, 4 },{ "SBC", SBC, ABX, 4 },{ "INC", INC, ABX, 7 },{ "???", XXX, IMP, 7 },
 	};
 
-uint8_t cpu_read( uint16_t a)
+static char* hex(uint32_t n, uint8_t d, char *dst) {
+    
+    int i;
+    dst[d] = 0;
+    for (i = d - 1; i >= 0; i--, n >>= 4) {
+        dst[i] = "0123456789ABCDEF"[n & 0xF];
+    }
+    return dst;
+}
+
+void disassemble(uint16_t nStart, uint16_t nStop, char *mapLines[0xFFFF]){
+	uint32_t addr = nStart;
+	uint8_t value = 0x00, lo = 0x00, hi = 0x00;
+	char *sInst = (char*)calloc(1024, 1);
+    char hex_aux[16];
+	uint16_t line_addr = 0;
+
+
+	while (addr <= (uint32_t)nStop)
+	{
+		strset(sInst, 0);
+		line_addr = addr;
+
+		
+		strcat(sInst , "$");
+		strcat(sInst, hex(addr, 4, hex_aux));
+		strcat(sInst, ": ");
+		
+		uint8_t opcode = cpuRead(addr); addr++;
+		strcat(sInst, lookup[opcode].name);
+		strcat(sInst, " ");
+		
+
+		
+		if (lookup[opcode].addressingMode == IMP)
+		{
+			strcat(sInst, " {IMP}");
+		}
+		else if (lookup[opcode].addressingMode == IMM)
+		{
+			value = cpuRead(addr); addr++;
+			strcat(sInst, "#$");
+			strcat(sInst, hex(value, 2, hex_aux));
+			strcat(sInst, " {IMM}");
+		}
+		else if (lookup[opcode].addressingMode == ZP0)
+		{
+			lo = cpuRead(addr); addr++;
+			hi = 0x00;		
+			strcat(sInst, "#$");
+			strcat(sInst, hex(lo, 2, hex_aux));	
+			strcat(sInst, " {ZP0}");							
+			
+		}
+		else if (lookup[opcode].addressingMode == ZPX)
+		{
+			lo = cpuRead(addr); addr++;
+			hi = 0x00;	
+			strcat(sInst, "$");		
+			strcat(sInst, hex(lo, 2, hex_aux));
+			strcat(sInst, ", X {ZPX}");											
+			
+		}
+		else if (lookup[opcode].addressingMode == ZPY)
+		{
+			lo = cpuRead(addr); addr++;
+			hi = 0x00;	
+			strcat(sInst, "$");		
+			strcat(sInst, hex(lo, 2, hex_aux));
+			strcat(sInst, ", Y {ZPY}");															
+			
+		}
+		else if (lookup[opcode].addressingMode == IZX)
+		{
+			lo = cpuRead(addr); addr++;
+			hi = 0x00;
+			strcat(sInst, "$");		
+			strcat(sInst, hex(lo, 2, hex_aux));
+			strcat(sInst, ", X) {IZX}");									
+			
+		}
+		else if (lookup[opcode].addressingMode == IZY)
+		{
+			lo = cpuRead(addr); addr++;
+			hi = 0x00;
+			strcat(sInst, "($");		
+			strcat(sInst, hex(lo, 2, hex_aux));
+			strcat(sInst, "), Y {IZY}");									
+			
+		}
+		else if (lookup[opcode].addressingMode == ABS)
+		{
+			lo = cpuRead(addr); addr++;
+			hi = cpuRead(addr); addr++;
+			strcat(sInst, "$");		
+			strcat(sInst, hex((uint16_t)(hi << 8) | lo, 4, hex_aux));
+			strcat(sInst, " {ABS}");
+			
+		}
+		else if (lookup[opcode].addressingMode == ABX)
+		{
+			lo = cpuRead(addr); addr++;
+			hi = cpuRead(addr); addr++;
+			strcat(sInst, "$");		
+			strcat(sInst, hex((uint16_t)(hi << 8) | lo, 4, hex_aux));
+			strcat(sInst, ", X {ABX}");
+			
+		}
+		else if (lookup[opcode].addressingMode == ABY)
+		{
+			lo = cpuRead(addr); addr++;
+			hi = cpuRead(addr); addr++;
+			strcat(sInst, "$");		
+			strcat(sInst, hex((uint16_t)(hi << 8) | lo, 4, hex_aux));
+			strcat(sInst, ", Y {ABY}");
+			
+		}
+		else if (lookup[opcode].addressingMode == IND)
+		{
+			lo = cpuRead(addr); addr++;
+			hi = cpuRead(addr); addr++;
+			strcat(sInst, "($");		
+			strcat(sInst, hex((uint16_t)(hi << 8) | lo, 4, hex_aux));
+			strcat(sInst, ") {IND}");
+			
+		}
+		else if (lookup[opcode].addressingMode == REL)
+		{
+			value = cpuRead(addr); addr++;
+			strcat(sInst, "$");	
+			strcat(sInst, hex(value, 2, hex_aux));	
+			strcat(sInst, " [$");	
+			strcat(sInst, hex(addr + (int8_t)value, 4, hex_aux));
+			strcat(sInst, "] {REL}");
+			
+		}
+		
+		mapLines[line_addr] = strdup(sInst);
+		
+	}
+
+}
+uint8_t cpuRead( uint16_t a)
 {
+	//printf("cpuRead S\n");
 	return read(cpu.bus, a, 0);
 }
-void cpu_write( uint16_t a, uint16_t d)
+void cpuWrite( uint16_t a, uint16_t d)
 {
 	write(cpu.bus, a, d);
 }
@@ -86,11 +233,11 @@ uint8_t GetFlag( Flags f){
 
 void cpuClock()
 {
-	
+	//printf("cpuClock\n");	
 	if (cpu.cycles == 0)
 	{
 		
-		cpu.opcode = cpu_read(cpu.PC);
+		cpu.opcode = cpuRead(cpu.PC);
 		
 		SetFlag(U, 1);
 		
@@ -106,20 +253,24 @@ void cpuClock()
 		SetFlag(U, 1);
 	}
 	
-	cpu.clock_count++;
+	
 
 	cpu.cycles--;
 }
 
-void reset()
+void cpuReset()
 {
-	
+	printf("\ncpuReset S\n");
 	cpu.addr_abs = 0xFFFC;
-	uint16_t lo = cpu_read(cpu.addr_abs + 0);
-	uint16_t hi = cpu_read(cpu.addr_abs + 1);
-
+	if (!cpu.bus) {
+        printf("Error: bus is NULL.\n");
+        return;
+    }
+	uint16_t lo = cpuRead(cpu.addr_abs + 0);
+	uint16_t hi = cpuRead(cpu.addr_abs + 1);
+	printf("cpuReset E\n");
 	cpu.PC = (hi << 8) | lo;
-
+	printf("%x\n", cpu.PC);
 	cpu.A = 0;
 	cpu.X = 0;
 	cpu.Y = 0;
@@ -131,24 +282,29 @@ void reset()
 	cpu.fetched = 0x00;
 
 	cpu.cycles = 8;
+	
 }
 
-void nmi()
+int CpuComplete(){
+	return cpu.cycles == 0;
+}
+
+void NMI()
 {
-	cpu_write(0x0100 + cpu.SP, (cpu.PC >> 8) & 0x00FF);
+	cpuWrite(0x0100 + cpu.SP, (cpu.PC >> 8) & 0x00FF);
 	cpu.SP--;
-	cpu_write(0x0100 + cpu.SP, cpu.PC & 0x00FF);
+	cpuWrite(0x0100 + cpu.SP, cpu.PC & 0x00FF);
 	cpu.SP--;
 
 	SetFlag(B, 0);
 	SetFlag(U, 1);
 	SetFlag(I, 1);
-	cpu_write(0x0100 + cpu.SP, cpu.F);
+	cpuWrite(0x0100 + cpu.SP, cpu.F);
 	cpu.SP--;
 
 	cpu.addr_abs = 0xFFFA;
-	uint16_t lo = cpu_read(cpu.addr_abs + 0);
-	uint16_t hi = cpu_read(cpu.addr_abs + 1);
+	uint16_t lo = cpuRead(cpu.addr_abs + 0);
+	uint16_t hi = cpuRead(cpu.addr_abs + 1);
 	cpu.PC = (hi << 8) | lo;
 
 	cpu.cycles = 8;
@@ -157,22 +313,22 @@ void nmi()
 void irq(){
 	if(GetFlag(I) == 0){
 		
-		cpu_write(0x0100 + cpu.SP, (cpu.PC >> 8) & 0x00FF);
+		cpuWrite(0x0100 + cpu.SP, (cpu.PC >> 8) & 0x00FF);
 		cpu.SP--;
-		cpu_write(0x0100 + cpu.SP, cpu.PC & 0x00FF);
+		cpuWrite(0x0100 + cpu.SP, cpu.PC & 0x00FF);
 		cpu.SP--;
 
 		
 		SetFlag(B, 0);
 		SetFlag(U, 1);
 		SetFlag(I, 1);
-		cpu_write(0x0100 + cpu.SP, cpu.F);
+		cpuWrite(0x0100 + cpu.SP, cpu.F);
 		cpu.SP--;
 
 		
 		cpu.addr_abs = 0xFFFE;
-		uint16_t lo = cpu_read(cpu.addr_abs + 0);
-		uint16_t hi = cpu_read(cpu.addr_abs + 1);
+		uint16_t lo = cpuRead(cpu.addr_abs + 0);
+		uint16_t hi = cpuRead(cpu.addr_abs + 1);
 		cpu.PC = (hi << 8) | lo;
 
 		
@@ -240,7 +396,7 @@ uint8_t ASL()
 	SetFlag(C, (temp & 0xFF00) > 0);
 	SetFlag(Z, (temp & 0x00FF) == 0x00);
 	SetFlag(N, temp & 0x80);
-	if (lookup[cpu.opcode].addressingMode == &IMP)
+	if (lookup[cpu.opcode].addressingMode == IMP)
 		cpu.A = temp & 0x00FF;
 	else
 		write(cpu.bus, cpu.addr_abs, temp & 0x00FF);
@@ -352,6 +508,7 @@ uint8_t BNE()
 
 uint8_t BPL()
 {
+	
 	if (GetFlag(N) == 0)
 	{
 		cpu.cycles++;
@@ -372,17 +529,18 @@ uint8_t BRK()
 	cpu.PC++;
 	
 	SetFlag(I, 1);
-	write(cpu.bus, 0x0100 + cpu.SP, (cpu.PC >> 8) & 0x00FF);
+	
+	cpuWrite( 0x0100 + cpu.SP, (cpu.PC >> 8) & 0x00FF);
 	cpu.SP--;
 	write(cpu.bus, 0x0100 + cpu.SP, cpu.PC & 0x00FF);
 	cpu.SP--;
 
 	SetFlag(B, 1);
-	write(cpu.bus, 0x0100 + cpu.SP, cpu.F);
+	cpuWrite(0x0100 + cpu.SP, cpu.F);
 	cpu.SP--;
 	SetFlag(B, 0);
 
-	cpu.PC = (uint16_t)cpu_read(0xFFFE) | ((uint16_t)cpu_read(0xFFFF) << 8);
+	cpu.PC = (uint16_t)cpuRead(0xFFFE) | ((uint16_t)cpuRead(0xFFFF) << 8);
 	return 0;
 }
 
@@ -619,8 +777,13 @@ uint8_t JSR()
 
 uint8_t LDA()
 {
+	
+		// printf("Cpu absaddr: %x\n", cpu.addr_abs);
+		// printf("Cpu fetched: %x\n", cpu.fetched);
+	
 	fetch();
 	cpu.A = cpu.fetched;
+	// printf("cpu A: %x\n", cpu.A & 0x80);
 	SetFlag(Z, cpu.A == 0x00);
 	SetFlag(N, cpu.A & 0x80);
 	return 1;
@@ -659,7 +822,7 @@ uint8_t LSR()
 	uint16_t temp = cpu.fetched >> 1;	
 	SetFlag(Z, (temp & 0x00FF) == 0x0000);
 	SetFlag(N, temp & 0x0080);
-	if (lookup[cpu.opcode].addressingMode == &IMP)
+	if (lookup[cpu.opcode].addressingMode == IMP)
 		cpu.A = temp & 0x00FF;
 	else
 		write(cpu.bus, cpu.addr_abs, temp & 0x00FF);
@@ -724,7 +887,7 @@ uint8_t PHP()
 uint8_t PLA()
 {
 	cpu.SP++;
-	cpu.A = cpu_read(0x0100 + cpu.SP);
+	cpu.A = cpuRead(0x0100 + cpu.SP);
 	SetFlag(Z, cpu.A == 0x00);
 	SetFlag(N, cpu.A & 0x80);
 	return 0;
@@ -736,7 +899,7 @@ uint8_t PLA()
 uint8_t PLP()
 {
 	cpu.SP++;
-	cpu.F= cpu_read(0x0100 + cpu.SP);
+	cpu.F= cpuRead(0x0100 + cpu.SP);
 	SetFlag(U, 1);
 	return 0;
 }
@@ -748,7 +911,7 @@ uint8_t ROL()
 	SetFlag(C, temp & 0xFF00);
 	SetFlag(Z, (temp & 0x00FF) == 0x0000);
 	SetFlag(N, temp & 0x0080);
-	if (lookup[cpu.opcode].addressingMode == &IMP)
+	if (lookup[cpu.opcode].addressingMode == IMP)
 		cpu.A = temp & 0x00FF;
 	else
 		write(cpu.bus, cpu.addr_abs, temp & 0x00FF);
@@ -762,7 +925,7 @@ uint8_t ROR()
 	SetFlag(C, cpu.fetched & 0x01);
 	SetFlag(Z, (temp & 0x00FF) == 0x00);
 	SetFlag(N, temp & 0x0080);
-	if (lookup[cpu.opcode].addressingMode == &IMP)
+	if (lookup[cpu.opcode].addressingMode == IMP)
 		cpu.A = temp & 0x00FF;
 	else
 		write(cpu.bus, cpu.addr_abs, temp & 0x00FF);
@@ -772,23 +935,24 @@ uint8_t ROR()
 uint8_t RTI()
 {
 	cpu.SP++;
-	cpu.F= cpu_read(0x0100 + cpu.SP);
-	cpu.F&= ~B;
-	cpu.F&= ~U;
+	cpu.F= cpuRead(0x0100 + cpu.SP);
+	SetFlag(B, ~GetFlag(B));
+	SetFlag(U, ~GetFlag(U));
 
 	cpu.SP++;
-	cpu.PC = (uint16_t)cpu_read(0x0100 + cpu.SP);
+	cpu.PC = (uint16_t)cpuRead(0x0100 + cpu.SP);
 	cpu.SP++;
-	cpu.PC |= (uint16_t)cpu_read(0x0100 + cpu.SP) << 8;
+	cpu.PC |= (uint16_t)cpuRead(0x0100 + cpu.SP) << 8;
+	
 	return 0;
 }
 
 uint8_t RTS()
 {
 	cpu.SP++;
-	cpu.PC = (uint16_t)cpu_read(0x0100 + cpu.SP);
+	cpu.PC = (uint16_t)cpuRead(0x0100 + cpu.SP);
 	cpu.SP++;
-	cpu.PC |= (uint16_t)cpu_read(0x0100 + cpu.SP) << 8;
+	cpu.PC |= (uint16_t)cpuRead(0x0100 + cpu.SP) << 8;
 	
 	cpu.PC++;
 	return 0;
@@ -940,7 +1104,7 @@ uint8_t IMM(){
 // Relative
 uint8_t REL(){
 
-    cpu.addr_rel = cpu_read(cpu.PC);
+    cpu.addr_rel = cpuRead(cpu.PC);
     cpu.PC++;
     if(cpu.addr_rel & 0x80){
         cpu.addr_rel |= 0xFF00;
@@ -952,7 +1116,7 @@ uint8_t REL(){
 // Zero Page
 uint8_t ZP0(){
 
-    cpu.addr_abs = cpu_read(cpu.PC);
+    cpu.addr_abs = cpuRead(cpu.PC);
     cpu.PC++;
     cpu.addr_abs &= 0x00FF;
     return 0;
@@ -962,7 +1126,7 @@ uint8_t ZP0(){
 // Zero Page X
 uint8_t ZPX(){
 
-    cpu.addr_abs = cpu_read(cpu.PC) + cpu.X;
+    cpu.addr_abs = cpuRead(cpu.PC) + cpu.X;
     cpu.PC++;
     cpu.addr_abs &= 0x00FF;
     return 0;
@@ -972,7 +1136,7 @@ uint8_t ZPX(){
 // Zero Page Y
 uint8_t ZPY(){
 
-    cpu.addr_abs = cpu_read(cpu.PC) + cpu.Y;
+    cpu.addr_abs = cpuRead(cpu.PC) + cpu.Y;
     cpu.PC++;
     cpu.addr_abs &= 0x00FF;
     return 0;
@@ -982,9 +1146,9 @@ uint8_t ZPY(){
 // Absoulte
 uint8_t ABS(){
 
-    uint16_t lo = cpu_read(cpu.PC);
+    uint16_t lo = cpuRead(cpu.PC);
 	cpu.PC++;
-	uint16_t hi = cpu_read(cpu.PC);
+	uint16_t hi = cpuRead(cpu.PC);
 	cpu.PC++;
 
 	cpu.addr_abs = (hi << 8) | lo;
@@ -996,9 +1160,9 @@ uint8_t ABS(){
 // Absolute with X offset
 uint8_t ABX(){
 
-    uint16_t lo = cpu_read(cpu.PC);
+    uint16_t lo = cpuRead(cpu.PC);
 	cpu.PC++;
-	uint16_t hi = cpu_read(cpu.PC);
+	uint16_t hi = cpuRead(cpu.PC);
 	cpu.PC++;
 
 	cpu.addr_abs = (hi << 8) | lo;
@@ -1013,9 +1177,9 @@ uint8_t ABX(){
 // Absolute with Y offset
 uint8_t ABY(){
 
-    uint16_t lo = cpu_read(cpu.PC);
+    uint16_t lo = cpuRead(cpu.PC);
 	cpu.PC++;
-	uint16_t hi = cpu_read(cpu.PC);
+	uint16_t hi = cpuRead(cpu.PC);
 	cpu.PC++;
 
 	cpu.addr_abs = (hi << 8) | lo;
@@ -1030,20 +1194,20 @@ uint8_t ABY(){
 // Indirect
 uint8_t IND(){
 
-    uint16_t ptr_lo = cpu_read(cpu.PC);
+    uint16_t ptr_lo = cpuRead(cpu.PC);
 	cpu.PC++;
-	uint16_t ptr_hi = cpu_read(cpu.PC);
+	uint16_t ptr_hi = cpuRead(cpu.PC);
 	cpu.PC++;
 
 	uint16_t ptr = (ptr_hi << 8) | ptr_lo;
 
 	if (ptr_lo == 0x00FF) // Simulate page boundary hardware bug
 	{
-		cpu.addr_abs = (cpu_read(ptr & 0xFF00) << 8) | cpu_read(ptr + 0);
+		cpu.addr_abs = (cpuRead(ptr & 0xFF00) << 8) | cpuRead(ptr + 0);
 	}
 	else // Behave normally
 	{
-		cpu.addr_abs = (cpu_read(ptr + 1) << 8) | cpu_read(ptr + 0);
+		cpu.addr_abs = (cpuRead(ptr + 1) << 8) | cpuRead(ptr + 0);
 	}
 	
 	return 0;
@@ -1053,11 +1217,11 @@ uint8_t IND(){
 // Indirect X
 uint8_t IZX(){
 
-    uint16_t t = cpu_read(cpu.PC);
+    uint16_t t = cpuRead(cpu.PC);
 	cpu.PC++;
 
-	uint16_t lo = cpu_read((uint16_t)(t + (uint16_t)cpu.X) & 0x00FF);
-	uint16_t hi = cpu_read((uint16_t)(t + (uint16_t)cpu.X + 1) & 0x00FF);
+	uint16_t lo = cpuRead((uint16_t)(t + (uint16_t)cpu.X) & 0x00FF);
+	uint16_t hi = cpuRead((uint16_t)(t + (uint16_t)cpu.X + 1) & 0x00FF);
 
 	cpu.addr_abs = (hi << 8) | lo;
 	
@@ -1068,11 +1232,11 @@ uint8_t IZX(){
 // Indirect Y
 uint8_t IZY(){
 
-    uint16_t t = cpu_read(cpu.PC);
+    uint16_t t = cpuRead(cpu.PC);
 	cpu.PC++;
 
-	uint16_t lo = cpu_read(t & 0x00FF);
-	uint16_t hi = cpu_read((t + 1) & 0x00FF);
+	uint16_t lo = cpuRead(t & 0x00FF);
+	uint16_t hi = cpuRead((t + 1) & 0x00FF);
 
 	cpu.addr_abs = (hi << 8) | lo;
 	cpu.addr_abs += cpu.Y;
@@ -1092,7 +1256,8 @@ uint8_t IMP(){
 
 uint8_t fetch()
 {
-	if (lookup[cpu.opcode].addressingMode != &IMP)
-		cpu.fetched = cpu_read(cpu.addr_abs);
+	if (lookup[cpu.opcode].addressingMode != IMP)
+		cpu.fetched = cpuRead(cpu.addr_abs);
+		
 	return cpu.fetched;
 }

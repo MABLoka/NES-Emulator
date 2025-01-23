@@ -4,17 +4,9 @@
 #include "Cartridge.h"
 #include "raylib.h"
 
-
-
-typedef struct{
-    uint8_t     tblName[2][1024];
-	uint8_t     tblPattern[2][4096];
-	uint8_t		tblPalette[32];
-} PPU;
-
 typedef union
 	{
-		struct
+		struct 
 		{
 			uint8_t unused : 5;
 			uint8_t spriteOverflow : 1;
@@ -25,9 +17,9 @@ typedef union
 		uint8_t reg;
 } STATUS;
 
-typedef union
+typedef union 
 	{
-		struct
+		struct 
 		{
 			uint8_t grayscale : 1;
 			uint8_t render_background_left : 1;
@@ -44,44 +36,52 @@ typedef union
 
 typedef union 
 {
-	struct
-	{
-		uint8_t nametable_x : 1;
-		uint8_t nametable_y : 1;
-		uint8_t increment_mode : 1;
-		uint8_t pattern_sprite : 1;
-		uint8_t pattern_background : 1;
-		uint8_t sprite_size : 1;
-		uint8_t slave_mode : 1; // unused
+	struct 
+		{
+		uint8_t nametableX : 1;
+		uint8_t nametableY : 1;
+		uint8_t incrementMode : 1;
+		uint8_t patternSprite : 1;
+		uint8_t patternBackground : 1;
+		uint8_t spriteSize : 1;
+		uint8_t slaveMode : 1; // unused
 		uint8_t enable_nmi : 1;
-	} BITS;
+		};
 
 	uint8_t reg;
 } PPUCTRL;
 
-union loopyRegister
+typedef union 
 {
-	// Credit to Loopy for working this out :D
-	struct
-	{
-
-		uint16_t coarse_x : 5;
-		uint16_t coarse_y : 5;
-		uint16_t nametable_x : 1;
-		uint16_t nametable_y : 1;
-		uint16_t fine_y : 3;
+	
+	struct 
+		{
+		uint16_t coarseX : 5;
+		uint16_t coarseY : 5;
+		uint16_t nametableX : 1;
+		uint16_t nametableY : 1;
+		uint16_t fineY : 3;
 		uint16_t unused : 1;
 	};
 
-	uint16_t reg = 0x0000;
-};
+	uint16_t reg;
+}loopyRegister;
+
+
+typedef struct
+{	
+	uint32_t width;
+	uint32_t height;
+	Color *pixels;
+} Sprite;
+
 
 typedef struct{
 	Cartridge *cart;
     uint8_t     tblName[2][1024];
 	uint8_t     tblPattern[2][4096];
 	uint8_t		tblPalette[32];
-	Pixel  palScreen[0x40];
+	Color  palScreen[0x40];
 
 	Sprite* sprScreen;
 	Sprite* sprNameTable[2];
@@ -90,59 +90,53 @@ typedef struct{
 	loopyRegister vramAddr; 
 	loopyRegister tramAddr; 
 
-	// Pixel offset horizontally
-	uint8_t fineX = 0x00;
+	
+	uint8_t fineX;
 
-	// Internal communications
-	uint8_t addressLatch = 0x00;
-	uint8_t ppuDataBuffer = 0x00;
+	
+	uint8_t addressLatch;
+	uint8_t ppuDataBuffer;
 
-	// Pixel "dot" position information
-	int16_t scanline = 0;
-	int16_t cycle = 0;
+	
+	int16_t scanline;
+	int16_t cycle;
 
-	// Background rendering
-	uint8_t bgNextTile_id     = 0x00;
-	uint8_t bgNextTileAttrib = 0x00;
-	uint8_t bgNextTileLsb    = 0x00;
-	uint8_t bgNextTileMsb    = 0x00;
-	uint16_t bgShifterPatternLo = 0x0000;
-	uint16_t bgShifterPatternHi = 0x0000;
-	uint16_t bgShifterAttribLo  = 0x0000;
-	uint16_t bgShifterAttribHi  = 0x0000;
+	int frame_complete;
 
+	uint8_t bgNextTileId;
+	uint8_t bgNextTileAttrib;
+	uint8_t bgNextTileLsb;
+	uint8_t bgNextTileMsb;
+	uint16_t bgShifterPatternLo;
+	uint16_t bgShifterPatternHi;
+	uint16_t bgShifterAttribLo;
+	uint16_t bgShifterAttribHi;
+	int nmi;
 } PPU;
-int CartridgeCpuRead(Cartridge* cartridge, uint16_t addr, int rdonly = 0);
-int	CartridgeCpuWrite(Cartridge* cartridge, uint16_t addr, uint8_t  data);
+
 
 // Communications with PPU Bus
-int PpuRead( uint16_t addr, int rdonly = 0);
-int PpuWrite( uint16_t addr, uint8_t data);
+uint8_t ppuRead( uint16_t addr, int rdonly);
+void ppuWrite( uint16_t addr, uint8_t data);
 
-void ConnectCartridge(Cartridge* cartridge);
-void clock();
-void reset();
-
-int nmi = 0;
-
-typedef struct
-{
-	uint32_t n = (0xFF << 24);
-	uint8_t r; uint8_t g; uint8_t b; uint8_t a;
-} Pixel;
-
-typedef struct
-{	
-	uint32_t width;
-	uint32_t height;
-	enum Mode { NORMAL, PERIODIC, CLAMP };
-	enum Flip { NONE = 0, HORIZ = 1, VERT = 2 };
-	Color *pixels;
-} Sprite;
+void ConnectCartridgePpu(Cartridge* cartridge);
+void ppuClock();
+void ppuReset();
+PPU* GetPpu();
+void PpuInit();
+uint8_t ppuCpuRead(uint16_t addr, int rdonly);
+void ppuCpuWrite(uint16_t addr, uint8_t data);
 
 Sprite *SpriteCreate(uint32_t width, uint32_t height);
 Color SpriteGetPixel(Sprite *sprite, uint32_t x, uint32_t y);
 int SpriteSetPixel(Sprite *sprite, uint32_t x, uint32_t y, Color color);
+Color GetColorFromPaletteRam(uint8_t palette, uint8_t pixel);
+Sprite* GetPatternTable(uint8_t i, uint8_t palette);
 
-
-#endif
+void IncrementScrollX();
+void IncrementScrollY();
+void TransferAddressX();
+void TransferAddressY();
+void LoadBackgroundShifters();
+void UpdateShifters();
+#endif //PPU_H

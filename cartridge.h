@@ -36,15 +36,11 @@ typedef struct {
     size_t vCHRMemorySize;
     size_t vCHRMemoryCapacity;
 
+    uint8_t nPRGBanks;
+	uint8_t nCHRBanks;
+
     Mapper* pMapper; 
 } Cartridge;
-
-typedef struct {
-    uint8_t *items;
-    size_t size;
-    size_t capacity;
-} Vector;
-
 
 Cartridge *CartridgeCreate(const char* filePath);
 
@@ -55,4 +51,5 @@ int CartridgeCpuWrite(Cartridge* cartridge, uint16_t addr, uint8_t data);
 int CartridgePpuRead(Cartridge* cartridge, uint16_t addr, uint8_t* data);
 int CartridgePpuWrite(Cartridge* cartridge, uint16_t addr, uint8_t data);
 
+void CartridgeReset();
 #endif  // CARTRIDGE_H

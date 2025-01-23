@@ -1,128 +1,151 @@
 #include "ppu.h"
-uint32_t defN = (0xFF << 24);
+
 
 static PPU ppu = {0};
 static STATUS status = {0};
 static MASK mask = {0};
 static PPUCTRL control = {0};
 
+
 void PpuInit() {
-    ppu.palScreen[0x00] = (Pixel){defN, 84, 84, 84, 0xff};
-    ppu.palScreen[0x00] = (Pixel){ defN, 84, 84, 84, 0xff};
-    ppu.palScreen[0x01] = (Pixel){ defN, 0, 30, 116, 0xff};
-    ppu.palScreen[0x02] = (Pixel){ defN, 8, 16, 144, 0xff};
-    ppu.palScreen[0x03] = (Pixel){ defN, 48, 0, 136, 0xff};
-    ppu.palScreen[0x04] = (Pixel){ defN, 68, 0, 100, 0xff};
-    ppu.palScreen[0x05] = (Pixel){ defN, 92, 0, 48, 0xff};
-    ppu.palScreen[0x06] = (Pixel){ defN, 84, 4, 0, 0xff};
-    ppu.palScreen[0x07] = (Pixel){ defN, 60, 24, 0, 0xff};
-    ppu.palScreen[0x08] = (Pixel){ defN, 32, 42, 0, 0xff};
-    ppu.palScreen[0x09] = (Pixel){ defN, 8, 58, 0, 0xff};
-    ppu.palScreen[0x0A] = (Pixel){ defN, 0, 64, 0, 0xff};
-    ppu.palScreen[0x0B] = (Pixel){ defN, 0, 60, 0, 0xff};
-    ppu.palScreen[0x0C] = (Pixel){ defN, 0, 50, 60, 0xff};
-    ppu.palScreen[0x0D] = (Pixel){ defN, 0, 0, 0, 0xff};
-    ppu.palScreen[0x0E] = (Pixel){ defN, 0, 0, 0, 0xff};
-    ppu.palScreen[0x0F] = (Pixel){ defN, 0, 0, 0, 0xff};
+    ppu.palScreen[0x00] = (Color){84, 84, 84, 0xff};
+    ppu.palScreen[0x01] = (Color){0, 30, 116, 0xff};
+    ppu.palScreen[0x02] = (Color){8, 16, 144, 0xff};
+    ppu.palScreen[0x03] = (Color){48, 0, 136, 0xff};
+    ppu.palScreen[0x04] = (Color){68, 0, 100, 0xff};
+    ppu.palScreen[0x05] = (Color){92, 0, 48, 0xff};
+    ppu.palScreen[0x06] = (Color){84, 4, 0, 0xff};
+    ppu.palScreen[0x07] = (Color){60, 24, 0, 0xff};
+    ppu.palScreen[0x08] = (Color){32, 42, 0, 0xff};
+    ppu.palScreen[0x09] = (Color){8, 58, 0, 0xff};
+    ppu.palScreen[0x0A] = (Color){0, 64, 0, 0xff};
+    ppu.palScreen[0x0B] = (Color){0, 60, 0, 0xff};
+    ppu.palScreen[0x0C] = (Color){0, 50, 60, 0xff};
+    ppu.palScreen[0x0D] = (Color){0, 0, 0, 0xff};
+    ppu.palScreen[0x0E] = (Color){0, 0, 0, 0xff};
+    ppu.palScreen[0x0F] = (Color){0, 0, 0, 0xff};
 
-    ppu.palScreen[0x10] = (Pixel){ defN, 152, 150, 152, 0xff};
-    ppu.palScreen[0x11] = (Pixel){ defN, 8, 76, 196, 0xff};
-    ppu.palScreen[0x12] = (Pixel){ defN, 48, 50, 236, 0xff};
-    ppu.palScreen[0x13] = (Pixel){ defN, 92, 30, 228, 0xff};
-    ppu.palScreen[0x14] = (Pixel){ defN, 136, 20, 176, 0xff};
-    ppu.palScreen[0x15] = (Pixel){ defN, 160, 20, 100, 0xff};
-    ppu.palScreen[0x16] = (Pixel){ defN, 152, 34, 32, 0xff};
-    ppu.palScreen[0x17] = (Pixel){ defN, 120, 60, 0, 0xff};
-    ppu.palScreen[0x18] = (Pixel){ defN, 84, 90, 0, 0xff};
-    ppu.palScreen[0x19] = (Pixel){ defN, 40, 114, 0, 0xff};
-    ppu.palScreen[0x1A] = (Pixel){ defN, 8, 124, 0, 0xff};
-    ppu.palScreen[0x1B] = (Pixel){ defN, 0, 118, 40, 0xff};
-    ppu.palScreen[0x1C] = (Pixel){ defN, 0, 102, 120, 0xff};
+    ppu.palScreen[0x10] = (Color){152, 150, 152, 0xff};
+    ppu.palScreen[0x11] = (Color){8, 76, 196, 0xff};
+    ppu.palScreen[0x12] = (Color){48, 50, 236, 0xff};
+    ppu.palScreen[0x13] = (Color){92, 30, 228, 0xff};
+    ppu.palScreen[0x14] = (Color){136, 20, 176, 0xff};
+    ppu.palScreen[0x15] = (Color){160, 20, 100, 0xff};
+    ppu.palScreen[0x16] = (Color){152, 34, 32, 0xff};
+    ppu.palScreen[0x17] = (Color){120, 60, 0, 0xff};
+    ppu.palScreen[0x18] = (Color){84, 90, 0, 0xff};
+    ppu.palScreen[0x19] = (Color){40, 114, 0, 0xff};
+    ppu.palScreen[0x1A] = (Color){8, 124, 0, 0xff};
+    ppu.palScreen[0x1B] = (Color){0, 118, 40, 0xff};
+    ppu.palScreen[0x1C] = (Color){0, 102, 120, 0xff};
 
-    ppu.palScreen[0x1D] = (Pixel){ defN, 0, 0, 0, 0xff};
-    ppu.palScreen[0x1E] = (Pixel){ defN, 0, 0, 0, 0xff};
-    ppu.palScreen[0x1F] = (Pixel){ defN, 0, 0, 0, 0xff};
-    ppu.palScreen[0x20] = (Pixel){ defN, 236, 238, 236, 0xff};
-    ppu.palScreen[0x21] = (Pixel){ defN, 76, 154, 236, 0xff};
-    ppu.palScreen[0x22] = (Pixel){ defN, 120, 124, 236, 0xff};
-    ppu.palScreen[0x23] = (Pixel){ defN, 176, 98, 236, 0xff};
-    ppu.palScreen[0x24] = (Pixel){ defN, 228, 84, 236, 0xff};
-    ppu.palScreen[0x25] = (Pixel){ defN, 236, 88, 180, 0xff};
-    ppu.palScreen[0x26] = (Pixel){ defN, 236, 106, 100, 0xff};
-    ppu.palScreen[0x27] = (Pixel){ defN, 212, 136, 32, 0xff};
-    ppu.palScreen[0x28] = (Pixel){ defN, 160, 170, 0, 0xff};
-    ppu.palScreen[0x29] = (Pixel){ defN, 116, 196, 0, 0xff};
+    ppu.palScreen[0x1D] = (Color){0, 0, 0, 0xff};
+    ppu.palScreen[0x1E] = (Color){0, 0, 0, 0xff};
+    ppu.palScreen[0x1F] = (Color){0, 0, 0, 0xff};
+    ppu.palScreen[0x20] = (Color){236, 238, 236, 0xff};
+    ppu.palScreen[0x21] = (Color){76, 154, 236, 0xff};
+    ppu.palScreen[0x22] = (Color){120, 124, 236, 0xff};
+    ppu.palScreen[0x23] = (Color){176, 98, 236, 0xff};
+    ppu.palScreen[0x24] = (Color){228, 84, 236, 0xff};
+    ppu.palScreen[0x25] = (Color){236, 88, 180, 0xff};
+    ppu.palScreen[0x26] = (Color){236, 106, 100, 0xff};
+    ppu.palScreen[0x27] = (Color){212, 136, 32, 0xff};
+    ppu.palScreen[0x28] = (Color){160, 170, 0, 0xff};
+    ppu.palScreen[0x29] = (Color){116, 196, 0, 0xff};
 
-    ppu.palScreen[0x2A] = (Pixel){ defN, 76, 208, 32, 0xff};
-    ppu.palScreen[0x2B] = (Pixel){ defN, 56, 204, 108, 0xff};
-    ppu.palScreen[0x2C] = (Pixel){ defN, 56, 180, 204, 0xff};
-    ppu.palScreen[0x2D] = (Pixel){ defN, 60, 60, 60, 0xff};
-    ppu.palScreen[0x2E] = (Pixel){ defN, 0, 0, 0, 0xff};
-    ppu.palScreen[0x2F] = (Pixel){ defN, 0, 0, 0, 0xff};
-    ppu.palScreen[0x30] = (Pixel){ defN, 236, 238, 236, 0xff};
-    ppu.palScreen[0x31] = (Pixel){ defN, 168, 204, 236, 0xff};
-    ppu.palScreen[0x32] = (Pixel){ defN, 188, 188, 236, 0xff};
-    ppu.palScreen[0x33] = (Pixel){ defN, 212, 178, 236, 0xff};
-    ppu.palScreen[0x34] = (Pixel){ defN, 236, 174, 236, 0xff};
+    ppu.palScreen[0x2A] = (Color){76, 208, 32, 0xff};
+    ppu.palScreen[0x2B] = (Color){56, 204, 108, 0xff};
+    ppu.palScreen[0x2C] = (Color){56, 180, 204, 0xff};
+    ppu.palScreen[0x2D] = (Color){60, 60, 60, 0xff};
+    ppu.palScreen[0x2E] = (Color){0, 0, 0, 0xff};
+    ppu.palScreen[0x2F] = (Color){0, 0, 0, 0xff};
+    ppu.palScreen[0x30] = (Color){236, 238, 236, 0xff};
+    ppu.palScreen[0x31] = (Color){168, 204, 236, 0xff};
+    ppu.palScreen[0x32] = (Color){188, 188, 236, 0xff};
+    ppu.palScreen[0x33] = (Color){212, 178, 236, 0xff};
+    ppu.palScreen[0x34] = (Color){236, 174, 236, 0xff};
 
-    ppu.palScreen[0x35] = (Pixel){ defN, 236, 174, 212, 0xff};
-    ppu.palScreen[0x36] = (Pixel){ defN, 236, 180, 176, 0xff};
-    ppu.palScreen[0x37] = (Pixel){ defN, 228, 196, 144, 0xff};
-    ppu.palScreen[0x38] = (Pixel){ defN, 204, 210, 120, 0xff};
-    ppu.palScreen[0x39] = (Pixel){ defN, 180, 222, 120, 0xff};
-    ppu.palScreen[0x3A] = (Pixel){ defN, 168, 226, 144, 0xff};
-    ppu.palScreen[0x3B] = (Pixel){ defN, 152, 226, 180, 0xff};
-    ppu.palScreen[0x3C] = (Pixel){ defN, 160, 214, 228, 0xff};
-    ppu.palScreen[0x3D] = (Pixel){ defN, 160, 162, 160, 0xff};
-    ppu.palScreen[0x3E] = (Pixel){ defN, 0, 0, 0, 0xff};
-    ppu.palScreen[0x3F] = (Pixel){defN, .0, 0, 0, 0xff};
+    ppu.palScreen[0x35] = (Color){236, 174, 212, 0xff};
+    ppu.palScreen[0x36] = (Color){236, 180, 176, 0xff};
+    ppu.palScreen[0x37] = (Color){228, 196, 144, 0xff};
+    ppu.palScreen[0x38] = (Color){204, 210, 120, 0xff};
+    ppu.palScreen[0x39] = (Color){180, 222, 120, 0xff};
+    ppu.palScreen[0x3A] = (Color){168, 226, 144, 0xff};
+    ppu.palScreen[0x3B] = (Color){152, 226, 180, 0xff};
+    ppu.palScreen[0x3C] = (Color){160, 214, 228, 0xff};
+    ppu.palScreen[0x3D] = (Color){160, 162, 160, 0xff};
+    ppu.palScreen[0x3E] = (Color){0, 0, 0, 0xff};
+    ppu.palScreen[0x3F] = (Color){0, 0, 0, 0xff};
 
     ppu.sprScreen = SpriteCreate(256, 240);
     ppu.sprNameTable[0] = SpriteCreate(256, 240);
     ppu.sprNameTable[1] = SpriteCreate(256, 240);
     ppu.sprPatternTable[0] = SpriteCreate(128, 128);
     ppu.sprPatternTable[1] = SpriteCreate(128, 128);
+
+	status.reg = 0x00;
+	mask.reg = 0x00;
+	control.reg = 0x00;
+	ppu.vramAddr.reg = 0x0000;
+	ppu.tramAddr.reg = 0x0000;
+    
+    ppu.fineX = 0x00;
+	ppu.addressLatch = 0x00;
+	ppu.ppuDataBuffer = 0x00;
+	ppu.scanline = 0;
+	ppu.cycle = 0;
+	ppu.bgNextTileId     = 0x00;
+	ppu.bgNextTileAttrib = 0x00;
+	ppu.bgNextTileLsb    = 0x00;
+	ppu.bgNextTileMsb    = 0x00;
+	ppu.bgShifterPatternLo = 0x0000;
+	ppu.bgShifterPatternHi = 0x0000;
+	ppu.bgShifterAttribLo  = 0x0000;
+	ppu.bgShifterAttribHi  = 0x0000;
 }
 
-Sprite *SpriteCreate(uint16_t width, uint16_t height) {
-    Sprite *sprite = (Sprite*)malloc(sizeof(sprite));
+Sprite *SpriteCreate(uint32_t width, uint32_t height) {
+    Sprite *sprite = (Sprite*)malloc(sizeof(Sprite));
     sprite->width = width;
     sprite->height = height;
     sprite->pixels = (Color*)malloc(width*height*sizeof(Color));
-    for (int j = 0; j < height; j++) {
-        for (int i = 0; i < width; i++) {
+    for (uint32_t j = 0; j < height; j++) {
+        for (uint32_t i = 0; i < width; i++) {
             SpriteSetPixel(sprite, i, j, BLACK);
         }
     }
     return sprite;
 }
 
-Color SpriteGetPixel(Sprite *sprite, uint16_t x, uint16_t y) {
+Color SpriteGetPixel(Sprite *sprite, uint32_t x, uint32_t y) {
+	
     return sprite->pixels[x*sprite->height + y];
 }
 
-bool SpriteSetPixel(Sprite *sprite, uint16_t x, uint16_t y, Color color) {
-    if (x >= 0 && x < sprite->width && y >= 0 && y < sprite->height) {
-        sprite->pixels[x*sprite->height + y] = color;
-        return true;
+int SpriteSetPixel(Sprite *sprite, uint32_t x, uint32_t y, Color pixel) {
+	//printf("SpriteSetPixelS\n");
+    if ((x >= 0) && (x < sprite->width) && (y >= 0) && (y < sprite->height)) {
+        sprite->pixels[x*sprite->height + y] = pixel;
+        return 1;
     }
-    return false;
+    return 0;
 }
 
 Sprite* GetPatternTable(uint8_t i, uint8_t palette)
 {
-	
+	//printf("GetPatternTableS\n");
 	for (uint16_t nTileY = 0; nTileY < 16; nTileY++)
 	{
+		//printf("nTileY\n");
 		for (uint16_t nTileX = 0; nTileX < 16; nTileX++)
 		{
-			
+			//printf("nTileX\n");
 			uint16_t nOffset = nTileY * 256 + nTileX * 16;
 
 			
 			for (uint16_t row = 0; row < 8; row++)
 			{
-				
+				//printf("row\n");
 				uint8_t tile_lsb = ppuRead(i * 0x1000 + nOffset + row + 0x0000, 0);
 				uint8_t tile_msb = ppuRead(i * 0x1000 + nOffset + row + 0x0008, 0);
 
@@ -134,23 +157,204 @@ Sprite* GetPatternTable(uint8_t i, uint8_t palette)
 
 					tile_lsb >>= 1; tile_msb >>= 1;
 
-					ppu.sprPatternTable[i]->SetPixel
-					(
-						nTileX * 8 + (7 - col), 
-
-						nTileY * 8 + row, 
-						GetColourFromPaletteRam(palette, pixel)
-					);
+					SpriteSetPixel(ppu.sprPatternTable[i],
+					nTileX * 8 + (7 - col),
+					nTileY * 8 + row,
+					 GetColorFromPaletteRam(palette, pixel)); 
 				}
 			}
 		}
 	}
 
-	return *ppu.sprPatternTable[i];
+	return ppu.sprPatternTable[i];
 }
 
-uint8_t ppuRead(uint16_t addr, int rdonly){
-    uint8_t data = 0x00;
+Color GetColorFromPaletteRam(uint8_t palette, uint8_t pixel)
+{
+	return ppu.palScreen[ppuRead(0x3F00 + (palette << 2) + pixel, 0) & 0x3F];
+}
+
+void ConnectCartridgePpu(Cartridge* cartridge)
+{
+	ppu.cart = cartridge;
+}
+
+void ppuReset()
+{
+	status.reg = 0x00;
+	mask.reg = 0x00;
+	control.reg = 0x00;
+	ppu.vramAddr.reg = 0x0000;
+	ppu.tramAddr.reg = 0x0000;
+    
+    ppu.fineX = 0x00;
+	ppu.addressLatch = 0x00;
+	ppu.ppuDataBuffer = 0x00;
+	ppu.scanline = 0;
+	ppu.cycle = 0;
+	ppu.bgNextTileId     = 0x00;
+	ppu.bgNextTileAttrib = 0x00;
+	ppu.bgNextTileLsb    = 0x00;
+	ppu.bgNextTileMsb    = 0x00;
+	ppu.bgShifterPatternLo = 0x0000;
+	ppu.bgShifterPatternHi = 0x0000;
+	ppu.bgShifterAttribLo  = 0x0000;
+	ppu.bgShifterAttribHi  = 0x0000;
+}
+PPU* GetPpu(){
+	return &ppu;
+}
+uint8_t ppuCpuRead(uint16_t addr, int rdonly)
+{
+	uint8_t data = 0x00;
+	addr &= 0x0007;
+	if (rdonly)
+	{
+
+		switch (addr)
+		{
+		case 0x0000: // Control
+			data = control.reg;
+			break;
+		case 0x0001: // Mask
+			data = mask.reg;
+			break;
+		case 0x0002: // Status
+			data = status.reg;
+			break;
+		case 0x0003: // OAM Address
+			break;
+		case 0x0004: // OAM Data
+			break;
+		case 0x0005: // Scroll
+			break;
+		case 0x0006: // PPU Address
+			break;
+		case 0x0007: // PPU Data
+			break;
+		}
+	}
+	else
+	{
+		
+		switch (addr)
+		{
+			
+			case 0x0000: break;
+			
+				
+			case 0x0001: break;
+			
+				
+			case 0x0002:
+				// printf("case 2\n");
+				// printf("ppuDataBuffer: %x\n", ppu.ppuDataBuffer);
+				// printf("status.reg: %x\n", status.reg);
+				
+				data = (status.reg & 0xE0) | (ppu.ppuDataBuffer & 0x1F);
+				
+				
+				status.verticalBlank = 0;
+
+				
+				ppu.addressLatch = 0;
+				break;
+
+				// OAM Address
+			case 0x0003: break;
+
+				// OAM Data
+			case 0x0004: break;
+
+				// Scroll - Not Readable
+			case 0x0005: break;
+
+				// PPU Address - Not Readable
+			case 0x0006: break;
+
+				// PPU Data
+			case 0x0007: 
+				// printf("case 7\n");
+				data = ppu.ppuDataBuffer;
+				// printf("Case  7: %x and %x\n", status.reg , ppu.ppuDataBuffer);
+				// printf("Case  7: Vram: %x at Vram: %x\n",ppu.vramAddr.reg ,ppuRead(ppu.vramAddr.reg, 0));
+				ppu.ppuDataBuffer = ppuRead(ppu.vramAddr.reg, 0);
+				
+				if (ppu.vramAddr.reg >= 0x3F00) 
+					data = ppu.ppuDataBuffer;
+				
+				ppu.vramAddr.reg += (control.incrementMode ? 32 : 1);
+				break;
+		}
+	}
+	
+	return data;
+}
+
+void ppuCpuWrite(uint16_t addr, uint8_t data)
+{
+	
+	addr &= 0x0007;
+	switch (addr)
+	{
+		case 0x0000: // Control
+			control.reg = data;
+			ppu.tramAddr.nametableX = control.nametableX;
+			ppu.tramAddr.nametableY = control.nametableY;
+			break;
+		case 0x0001: // Mask
+			mask.reg = data;
+			break;
+		case 0x0002: // Status
+			break;
+		case 0x0003: // OAM Address
+			break;
+		case 0x0004: // OAM Data
+			break;
+		case 0x0005: // Scroll
+			if (ppu.addressLatch == 0)
+			{
+				
+				ppu.fineX = data & 0x07;
+				ppu.tramAddr.coarseX = data >> 3;
+				ppu.addressLatch = 1;
+			}
+			else
+			{
+				
+				ppu.tramAddr.fineY = data & 0x07;
+				ppu.tramAddr.coarseY = data >> 3;
+				ppu.addressLatch = 0;
+			}
+			break;
+		case 0x0006: // PPU Address
+			if (ppu.addressLatch == 0)
+			{
+				
+				ppu.tramAddr.reg = (uint16_t)((data & 0x3F) << 8) | (ppu.tramAddr.reg & 0x00FF);
+				ppu.addressLatch = 1;
+			}
+			else
+			{
+				
+				ppu.tramAddr.reg = (ppu.tramAddr.reg & 0xFF00) | data;
+				ppu.vramAddr = ppu.tramAddr;
+				ppu.addressLatch = 0;
+			}
+			break;
+		case 0x0007: // PPU Data
+			ppuWrite(ppu.vramAddr.reg, data);
+			
+			ppu.vramAddr.reg += (control.incrementMode ? 32 : 1);
+			break;
+	}
+	
+}
+
+uint8_t ppuRead(uint16_t addr, int rdonly)
+{
+	//printf("ppuReadS\n");
+	uint8_t data = 0x00;
 	addr &= 0x3FFF;
 
 	if (CartridgePpuRead(ppu.cart, addr, &data))
@@ -200,8 +404,8 @@ uint8_t ppuRead(uint16_t addr, int rdonly){
 		if (addr == 0x0018) addr = 0x0008;
 		if (addr == 0x001C) addr = 0x000C;
 		data = ppu.tblPalette[addr] & (mask.grayscale ? 0x30 : 0x3F);
-    }
-
+	}
+	//printf("ppuReadE\n");
 	return data;
 }
 
@@ -256,30 +460,258 @@ void ppuWrite(uint16_t addr, uint8_t data)
 	}
 }
 
-void ConnectCartridge(Cartridge* cartridge)
+void ppuClock()
 {
-	ppu.cart = cartridge;
+	IncrementScrollX();
+	IncrementScrollY();
+	TransferAddressX();
+	TransferAddressY();
+	LoadBackgroundShifters();
+	UpdateShifters();
+
+	if (ppu.scanline >= -1 && ppu.scanline < 240)
+	{		
+		if (ppu.scanline == 0 && ppu.cycle == 0)
+		{
+			ppu.cycle = 1;
+		}
+
+		if (ppu.scanline == -1 && ppu.cycle == 1)
+		{
+
+			status.verticalBlank = 0;
+		}
+
+
+		if ((ppu.cycle >= 2 && ppu.cycle < 258) || (ppu.cycle >= 321 && ppu.cycle < 338))
+		{
+			UpdateShifters();
+			
+			
+
+			switch ((ppu.cycle - 1) % 8)
+			{
+			case 0:
+
+				LoadBackgroundShifters();
+
+				ppu.bgNextTileId = ppuRead(0x2000 | (ppu.vramAddr.reg & 0x0FFF), 0);
+
+		
+				break;
+			case 2:
+								
+				ppu.bgNextTileAttrib = ppuRead(0x23C0 | (ppu.vramAddr.nametableY << 11) 
+					                                 | (ppu.vramAddr.nametableX << 10) 
+					                                 | ((ppu.vramAddr.coarseY >> 2) << 3) 
+					                                 | (ppu.vramAddr.coarseX >> 2), 0);
+				
+		
+				if (ppu.vramAddr.coarseY & 0x02) ppu.bgNextTileAttrib >>= 4;
+				if (ppu.vramAddr.coarseX & 0x02) ppu.bgNextTileAttrib >>= 2;
+				ppu.bgNextTileAttrib &= 0x03;
+				break;
+
+			
+
+			case 4: 
+	
+				ppu.bgNextTileLsb = ppuRead((control.patternBackground << 12) 
+					                       + ((uint16_t)ppu.bgNextTileId << 4) 
+					                       + (ppu.vramAddr.fineY) + 0, 0);
+
+				break;
+			case 6:
+		
+				ppu.bgNextTileMsb = ppuRead((control.patternBackground << 12)
+					                       + ((uint16_t)ppu.bgNextTileId << 4)
+					                       + (ppu.vramAddr.fineY) + 8, 0);
+				break;
+			case 7:
+			
+				IncrementScrollX();
+				break;
+			}
+		}
+
+		if (ppu.cycle == 256)
+		{
+			IncrementScrollY();
+		}
+
+		if (ppu.cycle == 257)
+		{
+			LoadBackgroundShifters();
+			TransferAddressX();
+		}
+
+		if (ppu.cycle == 338 || ppu.cycle == 340)
+		{
+			ppu.bgNextTileId = ppuRead(0x2000 | (ppu.vramAddr.reg & 0x0FFF), 0);
+		}
+
+		if (ppu.scanline == -1 && ppu.cycle >= 280 && ppu.cycle < 305)
+		{
+			TransferAddressY();
+		}
+	}
+
+	if (ppu.scanline == 240)
+	{
+
+	}
+
+	if (ppu.scanline >= 241 && ppu.scanline < 261)
+	{
+		if (ppu.scanline == 241 && ppu.cycle == 1)
+		{
+			status.verticalBlank = 1;
+
+			if (control.enable_nmi) 
+				ppu.nmi = 1;
+		}
+	}
+
+	uint8_t bg_pixel = 0x00;  
+	uint8_t bg_palette = 0x00; 
+
+	
+	if (mask.render_background)
+	{
+		
+		uint16_t bit_mux = 0x8000 >> ppu.fineX;
+ 
+		uint8_t p0_pixel = (ppu.bgShifterPatternLo & bit_mux) > 0;
+		uint8_t p1_pixel = (ppu.bgShifterPatternHi & bit_mux) > 0;
+
+		
+		bg_pixel = (p1_pixel << 1) | p0_pixel;
+
+		
+		uint8_t bg_pal0 = (ppu.bgShifterAttribLo & bit_mux) > 0;
+		uint8_t bg_pal1 = (ppu.bgShifterAttribHi & bit_mux) > 0;
+		bg_palette = (bg_pal1 << 1) | bg_pal0;
+	}
+
+	SpriteSetPixel(ppu.sprScreen, ppu.cycle - 1, ppu.scanline, GetColorFromPaletteRam(bg_palette, bg_pixel));
+
+	
+	ppu.cycle++;
+	if (ppu.cycle >= 341)
+	{
+		ppu.cycle = 0;
+		ppu.scanline++;
+		if (ppu.scanline >= 261)
+		{
+			ppu.scanline = -1;
+			ppu.frame_complete = 1;
+		}
+	}
 }
 
-void reset()
+void IncrementScrollX()
 {
-	status.reg = 0x00;
-	mask.reg = 0x00;
-	control.reg = 0x00;
-	ppu.vramAddr.reg = 0x0000;
-	ppu.tramAddr.reg = 0x0000;
-    
-    ppu.fineX = 0x00;
-	ppu.addressLatch = 0x00;
-	ppu.ppuDataBuffer = 0x00;
-	ppu.scanline = 0;
-	ppu.cycle = 0;
-	ppu.bgNextTile_id     = 0x00;
-	ppu.bgNextTileAttrib = 0x00;
-	ppu.bgNextTileLsb    = 0x00;
-	ppu.bgNextTileMsb    = 0x00;
-	ppu.bgShifterPatternLo = 0x0000;
-	ppu.bgShifterPatternHi = 0x0000;
-	ppu.bgShifterAttribLo  = 0x0000;
-	ppu.bgShifterAttribHi  = 0x0000;
+	
+
+	if (mask.render_background || mask.render_sprites)
+	{
+		
+		if (ppu.vramAddr.coarseX == 31)
+		{
+			
+			ppu.vramAddr.coarseX = 0;
+			
+			ppu.vramAddr.nametableX = ~ppu.vramAddr.nametableX;
+		}
+		else
+		{
+			
+			ppu.vramAddr.coarseX++;
+		}
+	}
+}
+
+
+void IncrementScrollY()
+{
+
+	if (mask.render_background || mask.render_sprites)
+	{
+
+		if (ppu.vramAddr.fineY < 7)
+		{
+			ppu.vramAddr.fineY++;
+		}
+		else
+		{
+
+			ppu.vramAddr.fineY = 0;
+
+			if (ppu.vramAddr.coarseY == 29)
+			{
+
+				ppu.vramAddr.coarseY = 0;
+
+				ppu.vramAddr.nametableY = ~ppu.vramAddr.nametableY;
+			}
+			else if (ppu.vramAddr.coarseY == 31)
+			{
+
+				ppu.vramAddr.coarseY = 0;
+			}
+			else
+			{
+
+				ppu.vramAddr.coarseY++;
+			}
+		}
+	}
+}
+
+
+void TransferAddressX()
+{
+
+	if (mask.render_background || mask.render_sprites)
+	{
+		ppu.vramAddr.nametableX = ppu.tramAddr.nametableX;
+		ppu.vramAddr.coarseX    = ppu.tramAddr.coarseX;
+	}
+}
+
+void TransferAddressY()
+{
+
+	if (mask.render_background || mask.render_sprites)
+	{
+		ppu.vramAddr.fineY      = ppu.tramAddr.fineY;
+		ppu.vramAddr.nametableY = ppu.tramAddr.nametableY;
+		ppu.vramAddr.coarseY    = ppu.tramAddr.coarseY;
+	}
+}
+
+
+void LoadBackgroundShifters()
+{	
+
+	ppu.bgShifterPatternLo = (ppu.bgShifterPatternLo & 0xFF00) | ppu.bgNextTileLsb;
+	ppu.bgShifterPatternHi = (ppu.bgShifterPatternHi & 0xFF00) | ppu.bgNextTileMsb;
+
+	ppu.bgShifterAttribLo  = (ppu.bgShifterAttribLo & 0xFF00) | ((ppu.bgNextTileAttrib & 0b01) ? 0xFF : 0x00);
+	ppu.bgShifterAttribHi  = (ppu.bgShifterAttribHi & 0xFF00) | ((ppu.bgNextTileAttrib & 0b10) ? 0xFF : 0x00);
+}
+
+
+void UpdateShifters()
+{
+	if (mask.render_background)
+	{
+
+		ppu.bgShifterPatternLo <<= 1;
+		ppu.bgShifterPatternHi <<= 1;
+
+
+		ppu.bgShifterAttribLo <<= 1;
+		ppu.bgShifterAttribHi <<= 1;
+	}
 }
