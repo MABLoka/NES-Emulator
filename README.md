@@ -18,11 +18,11 @@ Below is a list of features that have been implemented so far and those that are
 - [ ] Foreground (Sprites)
 
 ### Mappers
-- [x] Mapper 000 (NROM)
+- [x] Mapper 000
 - [ ] Other mappers...
 
 ### APU (Audio Processing Unit)
-- [ ] APU stuff :D
+- [ ] APU
 
 ### Controller
 - [x] Keyboard
