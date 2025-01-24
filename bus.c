@@ -10,6 +10,12 @@ void bus_init(BUS *bus){
         bus->ram[i] = 0;
     }
 	bus->nSystemClockCounter = 0;
+	bus->dmaPage = 0x00;
+	bus->dmaAddr = 0x00;
+	bus->dmaData = 0x00;
+
+	bus->dmaDummy = 1;
+	bus->dmaTransfer = 0;
 	//bus->cpu = GetCpu(); // Connect the bus to
 }
 void reset(BUS *bus)
@@ -18,9 +24,14 @@ void reset(BUS *bus)
 	//CartridgeReset(bus->cartridge);
 	
 	cpuReset();
-	printf("reset E");
 	// ppuReset();
 	bus->nSystemClockCounter = 0;
+	bus->dmaPage = 0x00;
+	bus->dmaAddr = 0x00;
+	bus->dmaData = 0x00;
+
+	bus->dmaDummy = 1;
+	bus->dmaTransfer = 0;
 	printf("reset E");
 }
 
@@ -63,6 +74,12 @@ void write(BUS *bus, uint16_t addr, uint8_t data)
 		bus->ram[addr & 0x07FF] = data;
 	else if(addr >= 0x2000 && addr <= 0x3FFF)
 		ppuCpuWrite(addr, data);
+
+	else if(addr == 0x4014){
+		bus->dmaPage = data;
+		bus->dmaAddr = 0x00;
+		bus->dmaTransfer = 1;	
+	}
 	else if (addr >= 0x4016 && addr <= 0x4017) {
 		
 		bus->controller_state[addr & 0x0001] = bus->controller[addr & 0x0001];
@@ -80,28 +97,45 @@ void insertCartridge(BUS *bus,Cartridge* cartridge){
 
 void busClock(BUS *bus)
 {
-	// Clocking. The heart and soul of an emulator. The running
-	// frequency is controlled by whatever calls this function.
-	// So here we "divide" the clock as necessary and call
-	// the peripheral devices clock() function at the correct
-	// times.
-
-	// The fastest clock frequency the digital system cares
-	// about is equivalent to the PPU clock. So the PPU is clocked
-	// each time this function is called.
 	ppuClock();
 
-	// The CPU runs 3 times slower than the PPU so we only call its
-	// clock() function every 3 times this function is called. We
-	// have a global counter to keep track of this.
 	if (bus->nSystemClockCounter % 3 == 0)
 	{
-		cpuClock();
+		if (bus->dmaTransfer)
+		{
+			if (bus->dmaDummy)
+			{
+				if (bus->nSystemClockCounter % 2 == 1)
+				{
+					bus->dmaDummy = false;
+				}
+			}
+			else
+			{
+
+				if (bus->nSystemClockCounter % 2 == 0)
+				{
+					bus->dmaData = cpuRead(bus->dmaPage << 8 | bus->dmaAddr);
+				}
+				else
+				{
+					bus->ppu->pOAM[bus->dmaAddr] = bus->dmaData = 0x00;;
+
+					bus->dmaAddr++;
+
+					if (bus->dmaAddr == 0x00)
+					{
+						bus->dmaTransfer = 0;
+						bus->dmaDummy = 1;
+					}
+				}
+			}
+		}
+		else
+			cpuClock();
 	}
 
-	// The PPU is capable of emitting an interrupt to indicate the
-	// vertical blanking period has been entered. If it has, we need
-	// to send that irq to the CPU.
+	
 	if (bus->ppu->nmi)
 	{
 		bus->ppu->nmi = false;

@@ -102,6 +102,8 @@ void PpuInit() {
 	ppu.bgShifterPatternHi = 0x0000;
 	ppu.bgShifterAttribLo  = 0x0000;
 	ppu.bgShifterAttribHi  = 0x0000;
+
+	ppu.pOAM = (uint8_t*)malloc(sizeof(sObjectAttributeEntry)*64);
 }
 
 Sprite *SpriteCreate(uint32_t width, uint32_t height) {
@@ -549,9 +551,159 @@ void ppuClock()
 		{
 			TransferAddressY();
 		}
+		if (ppu.cycle == 257 && ppu.scanline >= 0)
+		{
+			memset(ppu.spriteScanline, 0xFF, 8 * sizeof(sObjectAttributeEntry));
+
+			
+			ppu.spriteCount = 0;
+
+			for (uint8_t i = 0; i < 8; i++)
+			{
+				ppu.spriteShifterPatternLo[i] = 0;
+				ppu.spriteShifterPatternHi[i] = 0;
+			}
+
+			
+			uint8_t nOAMEntry = 0;
+
+			
+			ppu.bSpriteZeroHitPossible = 0;
+
+			while (nOAMEntry < 64 && ppu.spriteCount < 9)
+			{
+				// Note the conversion to signed numbers here
+				int16_t diff = ((int16_t)ppu.scanline - (int16_t)ppu.OAM[nOAMEntry].y);
+
+				
+				if (diff >= 0 && diff < (control.spriteSize ? 16 : 8))
+				{
+					
+					if (ppu.spriteCount < 8)
+					{
+						// Is this sprite sprite zero?
+						if (nOAMEntry == 0)
+						{
+							
+							ppu.bSpriteZeroHitPossible = 1;
+						}
+
+						memcpy(&ppu.spriteScanline[ppu.spriteCount], &ppu.OAM[nOAMEntry], sizeof(sObjectAttributeEntry));
+						ppu.spriteCount++;
+					}				
+				}
+
+				nOAMEntry++;
+			} 
+
+			// Set sprite overflow flag
+			status.spriteOverflow = (ppu.spriteCount > 8);
+
+			
+		}
+
+		if (ppu.cycle == 340)
+				{
+
+					for (uint8_t i = 0; i < ppu.spriteCount; i++)
+					{
+						
+
+						uint8_t sprite_pattern_bits_lo, sprite_pattern_bits_hi;
+						uint16_t sprite_pattern_addr_lo, sprite_pattern_addr_hi;
+
+
+						if (!control.spriteSize)
+						{
+							// 8x8 Sprite Mode - The control register determines the pattern table
+							if (!(ppu.spriteScanline[i].attribute & 0x80))
+							{
+								// Sprite is NOT flipped vertically, i.e. normal    
+								sprite_pattern_addr_lo = 
+								(control.patternSprite << 12  )
+								| (ppu.spriteScanline[i].id   << 4   )  
+								| (ppu.scanline - ppu.spriteScanline[i].y); 
+														
+							}
+							else
+							{
+								// Sprite is flipped vertically, i.e. upside down
+								sprite_pattern_addr_lo = 
+								(control.patternSprite << 12  )  
+								| (ppu.spriteScanline[i].id   << 4   ) 
+								| (7 - (ppu.scanline - ppu.spriteScanline[i].y)); 
+							}
+
+						}
+						else
+						{
+							// 8x16 Sprite Mode - The sprite attribute determines the pattern table
+							if (!(ppu.spriteScanline[i].attribute & 0x80))
+							{
+								// Sprite is NOT flipped vertically, i.e. normal
+								if (ppu.scanline - ppu.spriteScanline[i].y < 8)
+								{
+									// Reading Top half Tile
+									sprite_pattern_addr_lo = 
+									((ppu.spriteScanline[i].id & 0x01)      << 12) 
+									| ((ppu.spriteScanline[i].id & 0xFE)      << 4 )  
+									| ((ppu.scanline - ppu.spriteScanline[i].y) & 0x07 ); 
+								}
+								else
+								{
+									// Reading Bottom Half Tile
+									sprite_pattern_addr_lo = 
+									( (ppu.spriteScanline[i].id & 0x01)      << 12)  
+									| (((ppu.spriteScanline[i].id & 0xFE) + 1) << 4 )  
+									| ((ppu.scanline - ppu.spriteScanline[i].y) & 0x07  ); 
+								}
+							}
+							else
+							{
+								// Sprite is flipped vertically, i.e. upside down
+								if (ppu.scanline - ppu.spriteScanline[i].y < 8)
+								{
+									// Reading Top half Tile
+									sprite_pattern_addr_lo = 
+									( (ppu.spriteScanline[i].id & 0x01)      << 12)    
+									| (((ppu.spriteScanline[i].id & 0xFE) + 1) << 4 )    
+									| (7 - (ppu.scanline - ppu.spriteScanline[i].y) & 0x07); 
+								}
+								else
+								{
+									// Reading Bottom Half Tile
+									sprite_pattern_addr_lo = 
+									((ppu.spriteScanline[i].id & 0x01)       << 12)    
+									| ((ppu.spriteScanline[i].id & 0xFE)       << 4 )    
+									| (7 - (ppu.scanline - ppu.spriteScanline[i].y) & 0x07);
+								}
+							}
+						}
+
+						
+						sprite_pattern_addr_hi = sprite_pattern_addr_lo + 8;
+
+						
+						sprite_pattern_bits_lo = ppuRead(sprite_pattern_addr_lo, 0);
+						sprite_pattern_bits_hi = ppuRead(sprite_pattern_addr_hi, 0);
+
+						if (ppu.spriteScanline[i].attribute & 0x40)
+						{
+							sprite_pattern_bits_lo = flipbyte(sprite_pattern_bits_lo);
+							sprite_pattern_bits_hi = flipbyte(sprite_pattern_bits_hi);
+						}
+
+						
+						ppu.spriteShifterPatternLo[i] = sprite_pattern_bits_lo;
+						ppu.spriteShifterPatternHi[i] = sprite_pattern_bits_hi;
+					}
+				}
+	
 	}
 
-	if (ppu.scanline == 240)
+	
+
+	if(ppu.scanline == 240)
 	{
 
 	}
@@ -571,7 +723,7 @@ void ppuClock()
 	uint8_t bg_palette = 0x00; 
 
 	
-	if (mask.render_background)
+	if(mask.reg & 0b00001000)
 	{
 		
 		uint16_t bit_mux = 0x8000 >> ppu.fineX;
@@ -588,10 +740,110 @@ void ppuClock()
 		bg_palette = (bg_pal1 << 1) | bg_pal0;
 	}
 
-	SpriteSetPixel(ppu.sprScreen, ppu.cycle - 1, ppu.scanline, GetColorFromPaletteRam(bg_palette, bg_pixel));
+	uint8_t fg_pixel = 0x00;   
+	uint8_t fg_palette = 0x00; 
+	uint8_t fg_priority = 0x00;
+							   
+	if (mask.reg & 0b00001000)
+	{
+	
+		ppu.bSpriteZeroBeingRendered = 0;
+
+		for (uint8_t i = 0; i < ppu.spriteCount; i++)
+		{
+			
+			if (ppu.spriteScanline[i].x == 0) 
+			{
+				
+				uint8_t fg_pixel_lo = (ppu.spriteShifterPatternLo[i] & 0x80) > 0;
+				uint8_t fg_pixel_hi = (ppu.spriteShifterPatternHi[i] & 0x80) > 0;
+				fg_pixel = (fg_pixel_hi << 1) | fg_pixel_lo;
+
+				fg_palette = (ppu.spriteScanline[i].attribute & 0x03) + 0x04;
+				fg_priority = (ppu.spriteScanline[i].attribute & 0x20) == 0;
+
+				
+				if (fg_pixel != 0)
+				{
+					if (i == 0) 
+					{
+						ppu.bSpriteZeroBeingRendered = 1;
+					}
+
+					break;
+				}				
+			}
+		}		
+	}
+
+	uint8_t pixel = 0x00;  
+	uint8_t palette = 0x00; 
+
+	if (bg_pixel == 0 && fg_pixel == 0)
+	{
+		
+		pixel = 0x00;
+		palette = 0x00;
+	}
+	else if (bg_pixel == 0 && fg_pixel > 0)
+	{
+		
+		pixel = fg_pixel;
+		palette = fg_palette;
+	}
+	else if (bg_pixel > 0 && fg_pixel == 0)
+	{
+		
+		pixel = bg_pixel;
+		palette = bg_palette;
+	}
+	else if (bg_pixel > 0 && fg_pixel > 0)
+	{
+		
+		if (fg_priority)
+		{
+		
+			pixel = fg_pixel;
+			palette = fg_palette;
+		}
+		else
+		{
+			
+			pixel = bg_pixel;
+			palette = bg_palette;
+		}
+
+		// Sprite Zero Hit detection
+		if (ppu.bSpriteZeroHitPossible && ppu.bSpriteZeroBeingRendered)
+		{
+			
+			if ((mask.reg & 0b00010000) & (mask.reg & 0b00001000))
+			{
+				
+				if (~((mask.reg & 0b01000000) | (mask.reg & 0b00100000)))
+				{
+					if (ppu.cycle >= 9 && ppu.cycle < 258)
+					{
+						status.spriteZeroHit = 1;
+					}
+				}
+				else
+				{
+					if (ppu.cycle >= 1 && ppu.cycle < 258)
+					{
+						status.spriteZeroHit = 1;
+					}
+				}
+			}
+		}
+	}
+
+
+	SpriteSetPixel(ppu.sprScreen, ppu.cycle - 1, ppu.scanline, GetColorFromPaletteRam(palette, pixel));
 
 	
 	ppu.cycle++;
+
 	if (ppu.cycle >= 341)
 	{
 		ppu.cycle = 0;
@@ -709,4 +961,13 @@ void UpdateShifters()
 		ppu.bgShifterAttribLo <<= 1;
 		ppu.bgShifterAttribHi <<= 1;
 	}
+}
+
+
+uint8_t flipbyte(uint8_t b)
+{
+	b = (b & 0xF0) >> 4 | (b & 0x0F) << 4;
+	b = (b & 0xCC) >> 2 | (b & 0x33) << 2;
+	b = (b & 0xAA) >> 1 | (b & 0x55) << 1;
+	return b;
 }

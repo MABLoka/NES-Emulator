@@ -3,6 +3,7 @@
 
 #include "Cartridge.h"
 #include "raylib.h"
+#include <string.h>
 
 typedef union
 	{
@@ -75,6 +76,13 @@ typedef struct
 	Color *pixels;
 } Sprite;
 
+typedef struct 
+{
+	uint8_t y;			// Y position of sprite
+	uint8_t id;			// ID of tile from pattern memory
+	uint8_t attribute;	// Flags define how sprite should be rendered
+	uint8_t x;			// X position of sprite
+} sObjectAttributeEntry;
 
 typedef struct{
 	Cartridge *cart;
@@ -111,8 +119,22 @@ typedef struct{
 	uint16_t bgShifterPatternHi;
 	uint16_t bgShifterAttribLo;
 	uint16_t bgShifterAttribHi;
+
+	uint8_t spriteCount;
+	uint8_t spriteShifterPatternLo[8];
+	uint8_t spriteShifterPatternHi[8];
+	sObjectAttributeEntry spriteScanline[8];
+
+	int bSpriteZeroHitPossible;
+	int bSpriteZeroBeingRendered;
+	uint8_t oam_addr;
+	uint8_t* pOAM;
+	sObjectAttributeEntry OAM[64];
 	int nmi;
+	
 } PPU;
+
+
 
 
 // Communications with PPU Bus
@@ -139,4 +161,7 @@ void TransferAddressX();
 void TransferAddressY();
 void LoadBackgroundShifters();
 void UpdateShifters();
+uint8_t flipbyte(uint8_t b);
+
+
 #endif //PPU_H

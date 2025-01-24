@@ -15,6 +15,13 @@ typedef struct {
     uint8_t controller_state[2];
     PPU *ppu;
     uint8_t controller[2];
+
+    uint8_t dmaPage;
+	uint8_t dmaAddr;
+	uint8_t dmaData;
+
+    int dmaDummy;
+	int dmaTransfer;
 } BUS;
 
 

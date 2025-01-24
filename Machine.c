@@ -258,7 +258,7 @@ void SetupDemo() {
     printf("ppu allocated successfully.\n");
 
     
-    Cartridge *cartridge = CartridgeCreate("./test/nestest2.nes");
+    Cartridge *cartridge = CartridgeCreate("./test/DK.nes");
     if (!cartridge) {
         printf("Error: bus is NULL.\n");
         return;
@@ -366,20 +366,43 @@ void StartDemo() {
     // printf("%x\n", ppu->sprScreen);
     // printf("%x\n", cpuRead(0x2002));
     const int nSwatchSize = 6;
-    
+    char hex_aux[16];
+    char s[1024];
+    char pOAM_str [256];
+    // for(int i = 0; i < 64; i++){
+    //     printf("%d\n", bus.ppu->pOAM[i]);
+    // }
     while (!WindowShouldClose()) {
-        //printf("LOOPStart!\n");
+        // printf("LOOPStart!\n");
         
         UpdateDemo();
         BeginDrawing();
             ClearBackground(DARKBLUE);
             DrawCpu(516, 2);
-            DrawCode(516, 72, 26);
-            if (!ppu->sprScreen) {
-                printf("Error: sprScreen is NULL.\n");
-                return;
-            }
-            DrawSprite(ppu->sprScreen, 0, 0, 2); 
+            //DrawCode(516, 72, 26);
+            
+            // for(int i = 0; i < 26; i++){
+        
+            //     strset(s, 0);
+            //     strset(pOAM_str, 0);
+            //     strcat(s, hex(i, 2, hex_aux));
+            //     strcat(s, ": (");
+                
+            //     sprintf(pOAM_str,"%d", bus.ppu->pOAM[i * 4 + 3]);
+            //     printf("1\n"); 
+            //     strcat(s, pOAM_str);
+            //     strset(pOAM_str, 0);strcat(s, ",");
+            //     sprintf(pOAM_str,"%d", bus.ppu->pOAM[i * 4 + 0]);
+            //     strcat(s, pOAM_str); strcat(s, ") ");
+            //     strset(pOAM_str, 0);
+            //     strcat(s, "ID: ");
+            //     strcat(s, hex(bus.ppu->pOAM[i * 4 + 1], 2, hex_aux));
+            //     strcat(s, " AT: ");
+            //     strcat(s, hex(bus.ppu->pOAM[i * 4 + 2], 2, hex_aux));
+                
+            //     DrawText(s, 516, 72 + i * 10, 2, WHITE);
+            // }
+            
             
             for (int p = 0; p < 8; p++) // For each palette
                 for(int s = 0; s < 4; s++) // For each index
@@ -393,7 +416,7 @@ void StartDemo() {
             //printf("DrawSprite1!\n");
             DrawSprite(GetPatternTable(1, selectedPalette), 648, 348, 1);
 
-           
+            DrawSprite(ppu->sprScreen, 0, 0, 2);
         // printf("EndDrawingS!\n");
         EndDrawing();
         //printf("LoopDone!\n");

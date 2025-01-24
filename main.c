@@ -1,7 +1,7 @@
 #include <stdio.h>
 
 #include "cpu.h"
-#include "demo.h"
+#include "Machine.h"
 #include "cartridge.h"
 
 // static BUS *bus = {0};
