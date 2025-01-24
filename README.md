@@ -14,7 +14,7 @@ Below is a list of features that have been implemented so far and those that are
 
 ### PPU (2C02)
 - [x] Background
-- [ ] Foreground (Sprites)
+- [x] Foreground (Sprites)~ish
 
 ### Mappers
 - [x] Mapper 000
