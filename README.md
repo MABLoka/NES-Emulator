@@ -40,3 +40,5 @@ gcc -Wall -Wextra -pedantic -O1 -Wunused-parameter -o NES *.c C:/raylib/raylib/s
 - [Nesdev Wiki](https://www.nesdev.org/wiki/Nesdev_Wiki)
 
 - [OneLoneCoder (javidx9)](https://onelonecoder.com/)
+
+- [idircarlos](https://github.com/idircarlos)
