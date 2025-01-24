@@ -20,7 +20,7 @@ void cpu_init(BUS* bus){
     // Status register
     cpu.F = 0;
     //stack pointer
-    cpu.SP = 0x00;
+    cpu.SP = 0xFD;
     // Program counter
     cpu.PC = 0x0000;
    
@@ -28,7 +28,7 @@ void cpu_init(BUS* bus){
     cpu.fetched = 0x00;
     cpu.addr_abs = 0x0000;
     cpu.opcode = 0x00;
-    cpu.cycles = 0;
+    cpu.cycles = 8;
     cpu.clock_count = 0;
 }
 
@@ -236,10 +236,9 @@ void cpuClock()
 	//printf("cpuClock\n");	
 	if (cpu.cycles == 0)
 	{
-		
-		cpu.opcode = cpuRead(cpu.PC);
-		
 		SetFlag(U, 1);
+
+		cpu.opcode = cpuRead(cpu.PC);
 		
 		cpu.PC++;
         uint8_t additional_cycle1 = (lookup[cpu.opcode].addressingMode)();
@@ -291,6 +290,7 @@ int CpuComplete(){
 
 void NMI()
 {
+	//printf("NMI\n");
 	cpuWrite(0x0100 + cpu.SP, (cpu.PC >> 8) & 0x00FF);
 	cpu.SP--;
 	cpuWrite(0x0100 + cpu.SP, cpu.PC & 0x00FF);
@@ -311,6 +311,7 @@ void NMI()
 }
 
 void irq(){
+	printf("IRQ\n");	
 	if(GetFlag(I) == 0){
 		
 		cpuWrite(0x0100 + cpu.SP, (cpu.PC >> 8) & 0x00FF);

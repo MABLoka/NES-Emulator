@@ -28,29 +28,7 @@ void reset(BUS *bus)
 // 	bus->cpu = cpu;
 // 	return bus;
 // }
-// Write to the addresses connected
-void write(BUS *bus, uint16_t addr, uint8_t data)
-{
-	//check if the address is in cartridege, cartridge is prioratized
-	if(CartridgeCpuWrite(bus->cartridge, addr, data)){ //CartridgeCpuRead return 0 if writing in cartridge failed
-
-	}
-	else if (addr >= 0x0000 && addr <= 0x1FFF) // check if it can be written to ram
-		bus->ram[addr & 0x07FF] = data;
-	else if(addr >= 0x2000 && addr <= 0x3FFF)
-		ppuCpuWrite(addr, data);
-	else if (addr >= 0x4016 && addr <= 0x4017) {
-	bus->controller_state[addr & 0x0001] = bus->controller[addr & 0x0001];
-	}
-
-}
-
-// Insert the cartridge by calling this function	  
-void insertCartridge(BUS *bus,Cartridge* cartridge){
-    bus->cartridge = cartridge;
-}
-
-
+// Read the addresses connected
 uint8_t read(BUS *bus, uint16_t addr, int bReadOnly)
 {
 	// printf("busread\n");
@@ -68,11 +46,37 @@ uint8_t read(BUS *bus, uint16_t addr, int bReadOnly)
 	}
 
 	else if (addr >= 0x4016 && addr <= 0x4017) {
+		
         data = (bus->controller_state[addr & 0x0001] & 0x80) > 0;
         bus->controller_state[addr & 0x0001] <<= 1;
     }	
 	return data;
 }
+// Write to the addresses connected
+void write(BUS *bus, uint16_t addr, uint8_t data)
+{
+	//check if the address is in cartridege, cartridge is prioratized
+	if(CartridgeCpuWrite(bus->cartridge, addr, data)){ //CartridgeCpuRead return 0 if writing in cartridge failed
+
+	}
+	else if (addr >= 0x0000 && addr <= 0x1FFF) // check if it can be written to ram
+		bus->ram[addr & 0x07FF] = data;
+	else if(addr >= 0x2000 && addr <= 0x3FFF)
+		ppuCpuWrite(addr, data);
+	else if (addr >= 0x4016 && addr <= 0x4017) {
+		
+		bus->controller_state[addr & 0x0001] = bus->controller[addr & 0x0001];
+	}
+
+}
+
+// Insert the cartridge by calling this function	  
+void insertCartridge(BUS *bus,Cartridge* cartridge){
+    bus->cartridge = cartridge;
+}
+
+
+
 
 void busClock(BUS *bus)
 {
@@ -98,9 +102,9 @@ void busClock(BUS *bus)
 	// The PPU is capable of emitting an interrupt to indicate the
 	// vertical blanking period has been entered. If it has, we need
 	// to send that irq to the CPU.
-	if (bus->ppu.nmi)
+	if (bus->ppu->nmi)
 	{
-		bus->ppu.nmi = false;
+		bus->ppu->nmi = false;
 		NMI();
 	}
 

@@ -168,9 +168,9 @@ void DrawSprite(Sprite *sprite, uint32_t x, uint32_t y, uint32_t scale) {
             for (int32_t j = 0; j < sprite->height; j++, fy += fym){
                 
                 // printf("sprite->height: %d\n", sprite->height);
-                for (uint32_t is = 0; is < scale; is++){
+                for (int32_t is = 0; is < scale; is++){
                     // printf("scale: %d\n", scale);
-                    for (uint32_t js = 0; js < scale; js++){
+                    for (int32_t js = 0; js < scale; js++){
                         // printf("scale: %d\n", scale);
                         DrawPixel(x + (i * scale) + is, y + (j * scale) + js, SpriteGetPixel(sprite, fx, fy));
                     }
@@ -230,61 +230,62 @@ void SetupDemo() {
     bus_init(&bus);
     cpu_init(&bus);
     PpuInit();
-    // cpu = malloc(sizeof(CPU));
+    cpu = malloc(sizeof(CPU));
     cpu = GetCpu();
-    // if (!cpu) {
-    //     printf("Error: cpu is NULL.\n");
-    //     return;
-    // }
-    // printf("CPU allocated successfully.\n");
-
-    // cpu->bus = malloc(sizeof(BUS));
     
-    // if (!cpu->bus) {
-    //     printf("Error: bus is NULL.\n");
-    //     return;
-    // }
-    // printf("Bus allocated successfully.\n");
+    if (!cpu) {
+        printf("Error: cpu is NULL.\n");
+        return;
+    }
+    printf("CPU allocated successfully.\n");
+
+    cpu->bus = malloc(sizeof(BUS));
+    
+    if (!cpu->bus) {
+        printf("Error: bus is NULL.\n");
+        return;
+    }
+    printf("Bus allocated successfully.\n");
 
     
-    // ppu = malloc(sizeof(ppu));
+    ppu = malloc(sizeof(ppu));
     ppu = GetPpu();
-
-    // if (!ppu) {
-    //     printf("Error: ppu is NULL.\n");
-    //     return;
-    // }
-    // printf("ppu allocated successfully.\n");
+    cpu->bus->ppu = ppu;
+    if (!ppu) {
+        printf("Error: ppu is NULL.\n");
+        return;
+    }
+    printf("ppu allocated successfully.\n");
 
     
     Cartridge *cartridge = CartridgeCreate("./test/nestest2.nes");
-    // if (!cartridge) {
-    //     printf("Error: bus is NULL.\n");
-    //     return;
-    // }
+    if (!cartridge) {
+        printf("Error: bus is NULL.\n");
+        return;
+    }
     printf("cartridge allocated successfully.\n");
     printf("Cartridge Created\n");
     
-    //cpu->bus->cartridge = malloc(sizeof(cartridge));
+    cpu->bus->cartridge = malloc(sizeof(cartridge));
     insertCartridge(cpu->bus, cartridge);
-    // if (!cpu->bus->cartridge) {
-    //     printf("Error: cartridge is NULL.\n");
-    //     return;
-    // }
+    if (!cpu->bus->cartridge) {
+        printf("Error: cartridge is NULL.\n");
+        return;
+    }
     printf("cartridge Inserted successfully.\n");
     
-    // ppu->cart = malloc(sizeof(cartridge));
+    ppu->cart = malloc(sizeof(cartridge));
     ConnectCartridgePpu(cpu->bus->cartridge);
-    // if (!ppu->cart) {
-    //     printf("Error: cartridge failed to connect to PPU.\n");
-    //     return;
-    // }
+    if (!ppu->cart) {
+        printf("Error: cartridge failed to connect to PPU.\n");
+        return;
+    }
+    
     printf("cartridge connected to PPU successfully.\n");
     printf("Cartridge Loaded\n");
 
     disassemble(0x0000, 0xFFFF, mapAsm);
     // Reset
-    
     reset(cpu->bus);
     
     printf("\nPC=%x, setupdone\n", cpu->PC);
@@ -297,15 +298,15 @@ void UpdateDemo() {
         printf("Error: bus is NULL.\n");
         return;
     }
-    cpu->bus->controller_state[0] = 0x00;
-    cpu->bus->controller_state[0] |= IsKeyDown(KEY_X) ? 0x80 : 0x00;
-    cpu->bus->controller_state[0] |= IsKeyDown(KEY_Z) ? 0x40 : 0x00;
-    cpu->bus->controller_state[0] |= IsKeyDown(KEY_A) ? 0x20 : 0x00;
-    cpu->bus->controller_state[0] |= IsKeyDown(KEY_S) ? 0x10 : 0x00;
-    cpu->bus->controller_state[0] |= IsKeyDown(KEY_UP) ? 0x08 : 0x00;
-    cpu->bus->controller_state[0] |= IsKeyDown(KEY_DOWN) ? 0x04 : 0x00;
-    cpu->bus->controller_state[0] |= IsKeyDown(KEY_LEFT) ? 0x02 : 0x00;
-    cpu->bus->controller_state[0] |= IsKeyDown(KEY_RIGHT) ? 0x00 : 0x00;
+    cpu->bus->controller[0] = 0x00;
+    cpu->bus->controller[0] |= IsKeyDown(KEY_X) ? 0x80 : 0x00;
+    cpu->bus->controller[0] |= IsKeyDown(KEY_Z) ? 0x40 : 0x00;
+    cpu->bus->controller[0] |= IsKeyDown(KEY_A) ? 0x20 : 0x00;
+    cpu->bus->controller[0] |= IsKeyDown(KEY_S) ? 0x10 : 0x00;
+    cpu->bus->controller[0] |= IsKeyDown(KEY_UP) ? 0x08 : 0x00;
+    cpu->bus->controller[0] |= IsKeyDown(KEY_DOWN) ? 0x04 : 0x00;
+    cpu->bus->controller[0] |= IsKeyDown(KEY_LEFT) ? 0x02 : 0x00;
+    cpu->bus->controller[0] |= IsKeyDown(KEY_RIGHT) ? 0x00 : 0x00;
     float elapsedTime = GetFrameTime();
     if (emulationRun) {
         if (residualTime > 0.0f)

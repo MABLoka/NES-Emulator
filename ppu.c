@@ -462,12 +462,7 @@ void ppuWrite(uint16_t addr, uint8_t data)
 
 void ppuClock()
 {
-	IncrementScrollX();
-	IncrementScrollY();
-	TransferAddressX();
-	TransferAddressY();
-	LoadBackgroundShifters();
-	UpdateShifters();
+	
 
 	if (ppu.scanline >= -1 && ppu.scanline < 240)
 	{		

@@ -13,7 +13,7 @@ typedef struct {
     uint8_t ram[2048]; // 2KB Memory Space
     uint32_t nSystemClockCounter;
     uint8_t controller_state[2];
-    PPU ppu;
+    PPU *ppu;
     uint8_t controller[2];
 } BUS;
 
