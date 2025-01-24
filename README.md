@@ -8,8 +8,7 @@ Below is a list of features that have been implemented so far and those that are
 
 ### CPU (6502)
 - [x] Official opcodes
-- [ ] Unofficial opcodes (By the moment some NOP)
-
+- [ ] Unofficial opcodes
 ### RAM
 - [x] Mirroring
 
